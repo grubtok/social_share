@@ -56,15 +56,11 @@ class _MyAppState extends State<MyApp> {
                 ),
                 RaisedButton(
                   onPressed: () async {
-                    File file = await ImagePicker.pickImage(
+                    File file = await ImagePicker.pickVideo(
                       source: ImageSource.gallery,
                     );
-                    SocialShare.shareInstagramStory(
-                      file.path,
-                      backgroundTopColor: "#ffffff",
-                      backgroundBottomColor: "#000000",
-                      attributionURL: "https://deep-link-url",
-                    ).then((data) {
+                    // InstagramShare.share(file.path, "video");
+                    SocialShare.shareInstagramFeed(file.path).then((data) {
                       print(data);
                     });
                   },
@@ -72,42 +68,31 @@ class _MyAppState extends State<MyApp> {
                 ),
                 RaisedButton(
                   onPressed: () async {
-                    await screenshotController.capture().then((image) async {
-                      SocialShare.shareInstagramStory(
-                        image.path,
-                        backgroundTopColor: "#ffffff",
-                        backgroundBottomColor: "#000000",
-                        attributionURL: "https://deep-link-url",
-                        backgroundImagePath: image.path,
-                      ).then((data) {
-                        print(data);
-                      });
-                    });
+                    // await screenshotController.capture().then((image) async {
+                    //   SocialShare.shareInstagramStory(
+                    //     image.toString(),
+                    //     backgroundImagePath: image.toString(),
+                    //   ).then((data) {
+                    //     print(data);
+                    //   });
+                    // });
                   },
                   child: Text("Share On Instagram Story with background"),
                 ),
                 RaisedButton(
                   onPressed: () async {
-                    await screenshotController.capture().then((image) async {
-                      //facebook appId is mandatory for andorid or else share won't work
-                      Platform.isAndroid
-                          ? SocialShare.shareFacebookStory(
-                              image.path,
-                              "#ffffff",
-                              "#000000",
-                              "https://google.com",
-                              appId: "xxxxxxxxxxxxx",
-                            ).then((data) {
-                              print(data);
-                            })
-                          : SocialShare.shareFacebookStory(
-                              image.path,
-                              "#ffffff",
-                              "#000000",
-                              "https://google.com",
-                            ).then((data) {
-                              print(data);
-                            });
+
+                    File file = await ImagePicker.pickVideo(
+                      source: ImageSource.gallery,
+                    );
+                    SocialShare.shareFacebookStory(
+                      file.path,
+                      "#ffffff",
+                      "#000000",
+                      "https://google.com",
+                      appId: "1384991511709370",
+                    ).then((data) {
+                      print(data);
                     });
                   },
                   child: Text("Share On Facebook Story"),
