@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -119,13 +120,15 @@ class SocialShare {
       args = <String, dynamic>{
         "captionText": captionText + "\n" + tags.toString(),
         "url": modifiedUrl,
-        "trailingText": (trailingText == null || trailingText.isEmpty) ? "" : trailingText
+        "trailingText":
+            (trailingText == null || trailingText.isEmpty) ? "" : trailingText
       };
     } else {
       args = <String, dynamic>{
         "captionText": captionText + " ",
         "url": modifiedUrl,
-        "trailingText": (trailingText == null || trailingText.isEmpty) ? "" : trailingText
+        "trailingText":
+            (trailingText == null || trailingText.isEmpty) ? "" : trailingText
       };
     }
     final String? version = await _channel.invokeMethod('shareTwitter', args);
