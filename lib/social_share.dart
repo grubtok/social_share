@@ -78,6 +78,7 @@ class SocialShare {
         "backgroundTopColor": backgroundTopColor,
         "backgroundBottomColor": backgroundBottomColor,
         "attributionURL": attributionURL,
+        "appId": appId
       };
     } else {
       File file = File(imagePath);
