@@ -5,6 +5,7 @@
 
 #import "SocialSharePlugin.h"
 #include <objc/runtime.h>
+#import <Photos/Photos.h>
 
 @implementation SocialSharePlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
@@ -15,112 +16,61 @@
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
     if ([@"shareInstagramStory" isEqualToString:call.method]) {
+        // Verify app can open custom URL scheme, open if able
+        NSData *backgroundVideo = [NSData dataWithContentsOfFile:call.arguments[@"backgroundImage"]];
+       // NSData *backgroundVideo = call.arguments[@"backgroundImage"];
+          NSURL *urlScheme = [NSURL URLWithString:@"instagram-stories://share?source_application=com.consumer.quse"];
+          if ([[UIApplication sharedApplication] canOpenURL:urlScheme]) {
+          
+                // Assign background image asset to pasteboard
+                NSArray *pasteboardItems = @[@{@"com.instagram.sharedSticker.backgroundVideo" : backgroundVideo}];
+                NSDictionary *pasteboardOptions = @{UIPasteboardOptionExpirationDate : [[NSDate date] dateByAddingTimeInterval:60 * 5]};
+                // This call is iOS 10+, can use 'setItems' depending on what versions you support
+                [[UIPasteboard generalPasteboard] setItems:pasteboardItems options:pasteboardOptions];
+            
+                [[UIApplication sharedApplication] openURL:urlScheme options:@{} completionHandler:nil];
+          } else {
+              // Handle older app versions or app not installed case
+          }
+    } else if ([@"shareInstagramFeed" isEqualToString:call.method]) {
+       /* PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+                                        fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
+                                        fetchOptions.fetchLimit = 1;
+                                        PHFetchResult *fetchResult;
+        
+        fetchResult = [PHAsset fetchAssetsWithMediaType:PHAssetMediaTypeVideo options:fetchOptions];
+        PHObject *lastAsset = fetchResult.firstObject;*/
+        
+       // if (lastAsset != nil) {
+                                           // NSString *localIdentifier = lastAsset.localIdentifier;
+                                            NSString *u = [NSString stringWithFormat:@"instagram://library?AssetPath=%@", call.arguments[@"backgroundImage"]];
+                                            NSURL *url = [NSURL URLWithString:u];
+                                            dispatch_async(dispatch_get_main_queue(), ^{
+                                                if ([[UIApplication sharedApplication] canOpenURL:url]) {
+                                                    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+                                                } else {
 
-
-
-        //Sharing story on instagram
-        NSString *stickerImage = call.arguments[@"stickerImage"];
-        NSString *backgroundTopColor = call.arguments[@"backgroundTopColor"];
-        NSString *backgroundBottomColor = call.arguments[@"backgroundBottomColor"];
-        NSString *attributionURL = call.arguments[@"attributionURL"];
-        NSString *backgroundImage = call.arguments[@"backgroundImage"];
-        //getting image from file
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        BOOL isFileExist = [fileManager fileExistsAtPath: stickerImage];
-        UIImage *imgShare;
-        if (isFileExist) {
-          //if image exists
-          imgShare = [[UIImage alloc] initWithContentsOfFile:stickerImage];
-        }
-        //url Scheme for instagram story
-        NSURL *urlScheme = [NSURL URLWithString:@"instagram-stories://share"];
-        //adding data to send to instagram story
-        if ([[UIApplication sharedApplication] canOpenURL:urlScheme]) {
-           //if instagram is installed and the url can be opened
-           if ( [ backgroundImage  length] == 0 ) {
-              //If you dont have a background image
-             // Assign background image asset and attribution link URL to pasteboard
-             NSArray *pasteboardItems = @[@{@"com.instagram.sharedSticker.stickerImage" : imgShare,
-                                            @"com.instagram.sharedSticker.backgroundTopColor" : backgroundTopColor,
-                                            @"com.instagram.sharedSticker.backgroundBottomColor" : backgroundBottomColor,
-                                            @"com.instagram.sharedSticker.contentURL" : attributionURL
-             }];
-             if (@available(iOS 10.0, *)) {
-             NSDictionary *pasteboardOptions = @{UIPasteboardOptionExpirationDate : [[NSDate date] dateByAddingTimeInterval:60 * 5]};
-             // This call is iOS 10+, can use 'setItems' depending on what versions you support
-             [[UIPasteboard generalPasteboard] setItems:pasteboardItems options:pasteboardOptions];
-                 
-               [[UIApplication sharedApplication] openURL:urlScheme options:@{} completionHandler:nil];
-                 //if success
-                 result(@"sharing");
-           } else {
-               result(@"this only supports iOS 10+");
-           }
-           
-       } else {
-           //if you have a background image
-           NSFileManager *fileManager = [NSFileManager defaultManager];
-           BOOL isFileExist = [fileManager fileExistsAtPath: backgroundImage];
-           UIImage *imgBackgroundShare;
-           if (isFileExist) {
-               imgBackgroundShare = [[UIImage alloc] initWithContentsOfFile:backgroundImage];
-           }
-               NSArray *pasteboardItems = @[@{@"com.instagram.sharedSticker.backgroundImage" : imgBackgroundShare,
-                                              @"com.instagram.sharedSticker.stickerImage" : imgShare,
-                                              @"com.instagram.sharedSticker.backgroundTopColor" : backgroundTopColor,
-                                              @"com.instagram.sharedSticker.backgroundBottomColor" : backgroundBottomColor,
-                                              @"com.instagram.sharedSticker.contentURL" : attributionURL
-                          }];
-                          if (@available(iOS 10.0, *)) {
-                          NSDictionary *pasteboardOptions = @{UIPasteboardOptionExpirationDate : [[NSDate date] dateByAddingTimeInterval:60 * 5]};
-                          // This call is iOS 10+, can use 'setItems' depending on what versions you support
-                          [[UIPasteboard generalPasteboard] setItems:pasteboardItems options:pasteboardOptions];
-                              
-                            [[UIApplication sharedApplication] openURL:urlScheme options:@{} completionHandler:nil];
-                              result(@"sharing");
-                        } else {
-                            result(@"this only supports iOS 10+");
-                        }
-           }
-       } else {
-           result(@"not supported or no facebook installed");
-       }
-    } else if ([@"shareFacebookStory" isEqualToString:call.method]) {
-        NSString *stickerImage = call.arguments[@"stickerImage"];
-        NSString *backgroundTopColor = call.arguments[@"backgroundTopColor"];
-        NSString *backgroundBottomColor = call.arguments[@"backgroundBottomColor"];
-        NSString *attributionURL = call.arguments[@"attributionURL"];
-        NSString *path = [[NSBundle mainBundle] pathForResource:@"Info" ofType:@"plist"];
-        NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:path];
-        NSString *appID = [dict objectForKey:@"FacebookAppID"];
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        BOOL isFileExist = [fileManager fileExistsAtPath: stickerImage];
-        UIImage *imgShare;
-        if (isFileExist) {
-           imgShare = [[UIImage alloc] initWithContentsOfFile:stickerImage];
-        }
+                                                    NSString *urlStr = @"https://itunes.apple.com/in/app/instagram/id389801252?mt=8";
+                                                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlStr] options:@{} completionHandler:nil];
+                                                }
+                                            });
+                                       // }
+    }else if ([@"shareFacebookStory" isEqualToString:call.method]) {
+        NSData *backgroundVideo = [NSData dataWithContentsOfFile:call.arguments[@"stickerImage"]];
         NSURL *urlScheme = [NSURL URLWithString:@"facebook-stories://share"];
-        if ([[UIApplication sharedApplication] canOpenURL:urlScheme]) {
-
-            // Assign background image asset and attribution link URL to pasteboard
-            NSArray *pasteboardItems = @[@{@"com.facebook.sharedSticker.stickerImage" : imgShare,
-                                           @"com.facebook.sharedSticker.backgroundTopColor" : backgroundTopColor,
-                                           @"com.facebook.sharedSticker.backgroundBottomColor" : backgroundBottomColor,
-                                           @"com.facebook.sharedSticker.contentURL" : attributionURL,
-                                           @"com.facebook.sharedSticker.appID" : appID}];
-            if (@available(iOS 10.0, *)) {
-            NSDictionary *pasteboardOptions = @{UIPasteboardOptionExpirationDate : [[NSDate date] dateByAddingTimeInterval:60 * 5]};
-            // This call is iOS 10+, can use 'setItems' depending on what versions you support
-            [[UIPasteboard generalPasteboard] setItems:pasteboardItems options:pasteboardOptions];
-
-            [[UIApplication sharedApplication] openURL:urlScheme options:@{} completionHandler:nil];
-              result(@"sharing");
-            } else {
-                result(@"this only supports iOS 10+");
-            }
-        } else {
-            result(@"not supported or no facebook installed");
-        }
+           if ([[UIApplication sharedApplication] canOpenURL:urlScheme]) {
+               
+               // Assign background video asset to pasteboard
+               NSArray *pasteboardItems = @[@{@"com.facebook.sharedSticker.backgroundVideo" : backgroundVideo,
+                                              @"com.facebook.sharedSticker.appID" : call.arguments[@"appId"]}];
+               NSDictionary *pasteboardOptions = @{UIPasteboardOptionExpirationDate : [[NSDate date] dateByAddingTimeInterval:60 * 5]};
+               // This call is iOS 10+, can use 'setItems' depending on what versions you support
+               [[UIPasteboard generalPasteboard] setItems:pasteboardItems options:pasteboardOptions];
+               
+               [[UIApplication sharedApplication] openURL:urlScheme options:@{} completionHandler:nil];
+           } else {
+               // Handle older app versions or app not installed case
+           }
     } else if ([@"copyToClipboard" isEqualToString:call.method]) {
         NSString *content = call.arguments[@"content"];
         UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
@@ -344,3 +294,4 @@
 }
 
 @end
+
